@@ -16,9 +16,18 @@ export const ProfessionalSignInForm = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Check if API URL is configured
+    if (!API_URL || API_URL.includes('localhost')) {
+      toast.error("API not configured. Please check environment variables.");
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('Attempting to sign in to:', `${API_URL}/auth/sign-in`);
+      
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for cold start
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
       
       const response = await fetch(`${API_URL}/auth/sign-in`, {
         method: 'POST',
@@ -33,18 +42,35 @@ export const ProfessionalSignInForm = () => {
       });
 
       clearTimeout(timeoutId);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers.get('content-type'));
+      
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.log('Non-JSON response:', text);
+        throw new Error('Server returned non-JSON response. Backend may be down.');
+      }
+      
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'Sign in failed');
+        throw new Error(data.message || `Server error (${response.status})`);
       }
 
-      const token = data.token;
-      signIn(token);
+      if (!data.token) {
+        throw new Error('No token received from server');
+      }
+
+      signIn(data.token);
       toast.success("Welcome back!");
     } catch (error) {
+      console.error('Sign in error:', error);
       if (error.name === 'AbortError') {
-        toast.error("Sign in timed out - backend may be starting up, please try again");
+        toast.error("Request timed out - backend is starting up, please wait and try again");
+      } else if (error.message.includes('fetch')) {
+        toast.error("Cannot connect to server. Please check your internet connection.");
       } else {
         toast.error(error.message || "Sign in failed");
       }

@@ -15,7 +15,19 @@ export const ProfessionalCreateAccountForm = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Check if API URL is configured
+    if (!API_URL || API_URL.includes('localhost')) {
+      toast.error("API not configured. Please check environment variables.");
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('Creating account at:', `${API_URL}/users`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      
       const response = await fetch(`${API_URL}/users`, {
         method: 'POST',
         headers: {
@@ -26,12 +38,42 @@ export const ProfessionalCreateAccountForm = () => {
           email,
           password,
         }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers.get('content-type'));
+      
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.log('Non-JSON response:', text);
+        throw new Error('Server returned non-JSON response. Backend may be down.');
+      }
+      
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'Account creation failed');
+        // Handle validation errors
+        if (data.errors && data.errors.json) {
+          const errors = data.errors.json;
+          const errorMessages = [];
+          
+          if (errors.password) {
+            errorMessages.push(...errors.password);
+          }
+          if (errors.email) {
+            errorMessages.push(...errors.email);
+          }
+          if (errors.username) {
+            errorMessages.push(...errors.username);
+          }
+          
+          throw new Error(errorMessages.join('. ') || data.message || 'Account creation failed');
+        }
+        throw new Error(data.message || `Server error (${response.status})`);
       }
 
       toast.success("Account created successfully! Please sign in.");
@@ -39,7 +81,14 @@ export const ProfessionalCreateAccountForm = () => {
       setEmail("");
       setPassword("");
     } catch (error) {
-      toast.error(error.message || "Account creation failed");
+      console.error('Account creation error:', error);
+      if (error.name === 'AbortError') {
+        toast.error("Request timed out - backend is starting up, please wait and try again");
+      } else if (error.message.includes('fetch')) {
+        toast.error("Cannot connect to server. Please check your internet connection.");
+      } else {
+        toast.error(error.message || "Account creation failed");
+      }
     } finally {
       setLoading(false);
     }

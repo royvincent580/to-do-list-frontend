@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { API_URL } from "../config/api.js";
 import { CheckSquare, Users, BarChart3, Shield, Zap, Globe, ArrowRight, Star } from "lucide-react";
 import { ProfessionalSignInForm } from "./ProfessionalSignInForm.jsx";
 import { ProfessionalCreateAccountForm } from "./ProfessionalCreateAccountForm.jsx";
@@ -300,6 +300,9 @@ export const LandingPage = () => {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Welcome to TodoApp
               </h2>
+              <div className="text-xs text-gray-400 mt-1">
+                API: {API_URL || 'Not configured'}
+              </div>
               <button
                 onClick={() => setShowAuthModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-2xl"

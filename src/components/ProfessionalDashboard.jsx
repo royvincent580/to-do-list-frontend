@@ -33,6 +33,11 @@ export const ProfessionalDashboard = () => {
         throw new Error('Failed to fetch tasks');
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
+      }
+      
       const data = await response.json();
       setTasks(data);
     } catch (error) {
@@ -54,6 +59,11 @@ export const ProfessionalDashboard = () => {
       
       if (!response.ok) {
         throw new Error('Failed to fetch tags');
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
       }
       
       const data = await response.json();
