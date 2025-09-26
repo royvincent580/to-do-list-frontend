@@ -36,6 +36,10 @@ export const CollaborationModal = ({ task, isOpen, onClose, onUpdated }) => {
         throw new Error('Failed to fetch collaborators');
       }
       
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response");
+      }
       const data = await response.json();
       setCollaborators(data);
     } catch (error) {
@@ -61,7 +65,12 @@ export const CollaborationModal = ({ task, isOpen, onClose, onUpdated }) => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+        } else {
+          throw new Error("Server error");
+        }
         throw new Error(errorData.message || 'Failed to add collaborator');
       }
 

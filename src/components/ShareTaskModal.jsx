@@ -25,7 +25,12 @@ export const ShareTaskModal = ({ task, isOpen, onClose, onUpdated }) => {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
+      const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+        } else {
+          throw new Error("Server error");
+        }
       throw new Error(errorData.message || 'Failed to add collaborator');
     }
   };

@@ -26,9 +26,19 @@ export const TasksPage = () => {
         throw new Error('Failed to fetch tasks');
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
+      }
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response");
+      }
       const data = await response.json();
       setTasks(data);
     } catch (error) {
+      console.error('Fetch tasks error:', error);
       toast.error("Failed to fetch tasks");
     }
   }, [token]);
@@ -41,9 +51,19 @@ export const TasksPage = () => {
         throw new Error('Failed to fetch tags');
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
+      }
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response");
+      }
       const data = await response.json();
       setTags(data);
     } catch (error) {
+      console.error('Fetch tags error:', error);
       toast.error("Failed to fetch tags");
     }
   };
