@@ -53,10 +53,6 @@ export const ProfessionalSignInForm = () => {
         throw new Error('Server returned non-JSON response. Backend may be down.');
       }
       
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server returned non-JSON response");
-      }
       const data = await response.json();
       
       if (!response.ok) {
