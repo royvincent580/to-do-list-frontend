@@ -25,12 +25,13 @@ export const ShareTaskModal = ({ task, isOpen, onClose, onUpdated }) => {
     });
     
     if (!response.ok) {
-        if (contentType && contentType.includes("application/json")) {
-          const errorData = await response.json();
-        } else {
-          throw new Error("Server error");
-        }
-      throw new Error(errorData.message || 'Failed to add collaborator');
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add collaborator');
+      } else {
+        throw new Error("Server error");
+      }
     }
   };
 
@@ -93,6 +94,18 @@ export const ShareTaskModal = ({ task, isOpen, onClose, onUpdated }) => {
     }
   };
 
+  const resetModal = () => {
+    setMode(null);
+    setEmail("");
+    setEmails([""]);
+    setLoading(false);
+  };
+
+  const handleClose = () => {
+    resetModal();
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -100,7 +113,7 @@ export const ShareTaskModal = ({ task, isOpen, onClose, onUpdated }) => {
       <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-gray-900">Share Task</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
             <X className="h-6 w-6" />
           </button>
         </div>
