@@ -33,11 +33,19 @@ export const ProfessionalSignInForm = () => {
       });
 
       clearTimeout(timeoutId);
-      const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'Sign in failed');
+        let errorMessage = 'Sign in failed';
+        try {
+          const data = await response.json();
+          errorMessage = data.message || errorMessage;
+        } catch {
+          errorMessage = `Server error (${response.status})`;
+        }
+        throw new Error(errorMessage);
       }
+      
+      const data = await response.json();
 
       const token = data.token;
       signIn(token);
