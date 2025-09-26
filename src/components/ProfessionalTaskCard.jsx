@@ -1,8 +1,10 @@
+import { API_URL } from "../config/api.js";
 import { useState } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
-import { CollaborationModal } from "./CollaborationModal.jsx";
+
 import { Edit3, Trash2, Users, Calendar, Tag } from "lucide-react";
-import axios from "axios";
+import { ShareTaskModal } from "./ShareTaskModal.jsx";
+
 import { toast } from "sonner";
 
 export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted }) => {
@@ -11,17 +13,20 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
   const [editContent, setEditContent] = useState("");
   const [editStatus, setEditStatus] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
-  const [showCollabModal, setShowCollabModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const { token } = useAuthStore();
 
   const getStatusConfig = (status) => {
     switch (status) {
       case "TaskStatus.PENDING":
+      case "PENDING":
         return { color: "bg-amber-100 text-amber-800 border-amber-200", text: "Pending" };
       case "TaskStatus.IN_PROGRESS":
+      case "IN_PROGRESS":
         return { color: "bg-blue-100 text-blue-800 border-blue-200", text: "In Progress" };
       case "TaskStatus.COMPLETED":
+      case "COMPLETED":
         return { color: "bg-green-100 text-green-800 border-green-200", text: "Completed" };
       default:
         return { color: "bg-gray-100 text-gray-800 border-gray-200", text: status };
@@ -32,20 +37,33 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
     setEditingTask(task.id);
     setEditTitle(task.title);
     setEditContent(task.content);
-    setEditStatus(task.status === "TaskStatus.PENDING" ? "PENDING" : 
-                  task.status === "TaskStatus.IN_PROGRESS" ? "IN_PROGRESS" : "COMPLETED");
+    const statusMap = {
+      "TaskStatus.PENDING": "PENDING",
+      "TaskStatus.IN_PROGRESS": "IN_PROGRESS", 
+      "TaskStatus.COMPLETED": "COMPLETED"
+    };
+    setEditStatus(statusMap[task.status] || task.status);
   };
 
   const handleUpdate = async (taskId) => {
     setLoading(true);
     try {
-      await axios.put(`http://localhost:5000/api/v1/tasks/${taskId}`, {
-        title: editTitle,
-        content: editContent,
-        status: editStatus
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: editTitle,
+          content: editContent,
+          status: editStatus
+        })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
 
       toast.success("Task updated successfully!");
       setEditingTask(null);
@@ -60,15 +78,31 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
   const handleDelete = async (taskId) => {
     if (!confirm("Are you sure you want to delete this task?")) return;
     
+    if (!token) {
+      toast.error("Please sign in first");
+      return;
+    }
+
+    console.log('Deleting task with ID:', taskId, 'Type:', typeof taskId);
+    
     try {
-      await axios.delete(`http://localhost:5000/api/v1/tasks/${taskId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
 
       toast.success("Task deleted successfully!");
       onTaskDeleted();
     } catch (error) {
-      toast.error("Failed to delete task");
+      console.error('Delete error:', error.message);
+      toast.error(error.message || "Failed to delete task");
     }
   };
 
@@ -140,10 +174,10 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
               <button
                 onClick={() => {
                   setSelectedTask(task);
-                  setShowCollabModal(true);
+                  setShowShareModal(true);
                 }}
                 className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-300"
-                title="Manage collaborators"
+                title="Share task"
               >
                 <Users className="h-4 w-4" />
               </button>
@@ -164,7 +198,7 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
               <div className="flex items-center space-x-1">
                 <Tag className="h-4 w-4 text-gray-400" />
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  {task.tagName}
+                  {task.tagName || 'No Tag'}
                 </span>
               </div>
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusConfig.color}`}>
@@ -172,10 +206,10 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
               </span>
             </div>
             
-            {task.created_at && (
+            {task.createdAt && (
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <Calendar className="h-3 w-3" />
-                <span>{new Date(task.created_at).toLocaleDateString()}</span>
+                <span>{new Date(task.createdAt).toLocaleDateString()}</span>
               </div>
             )}
           </div>
@@ -193,7 +227,7 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
             <button
               onClick={() => {
                 setSelectedTask(task);
-                setShowCollabModal(true);
+                setShowShareModal(true);
               }}
               className="flex items-center space-x-1 text-sm text-green-600 hover:text-green-700 font-medium transition-colors"
             >
@@ -211,12 +245,13 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
         </div>
       </div>
 
+
       {selectedTask && (
-        <CollaborationModal
+        <ShareTaskModal
           task={selectedTask}
-          isOpen={showCollabModal}
+          isOpen={showShareModal}
           onClose={() => {
-            setShowCollabModal(false);
+            setShowShareModal(false);
             setSelectedTask(null);
           }}
           onUpdated={onTaskUpdated}

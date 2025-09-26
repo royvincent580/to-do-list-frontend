@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { API_URL } from "../config/api.js";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
 import { Users, Plus, UserPlus, X } from "lucide-react";
-import axios from "axios";
+
 import { toast } from "sonner";
 
 export const TeamCollaborationModal = ({ isOpen, onClose, onTeamCreated }) => {
@@ -20,70 +21,39 @@ export const TeamCollaborationModal = ({ isOpen, onClose, onTeamCreated }) => {
       fetchTeams();
       fetchUsers();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchTeams, fetchUsers]);
 
-  const fetchTeams = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/v1/teams", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTeams(response.data);
-    } catch (error) {
-      toast.error("Failed to fetch teams");
-    }
-  };
+  const fetchTeams = useCallback(async () => {
+    // Teams feature not implemented in backend
+    setTeams([]);
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/users", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers(response.data);
+      const response = await fetch(`${API_URL}/users`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      
+      const data = await response.json();
+      setUsers(data);
     } catch (error) {
       toast.error("Failed to fetch users");
     }
-  };
+  }, []);
 
   const createTeam = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      await axios.post("http://localhost:5000/api/v1/teams", {
-        name: teamName,
-        description: teamDescription
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      toast.success("Team created successfully!");
-      setTeamName("");
-      setTeamDescription("");
-      setShowCreateForm(false);
-      fetchTeams();
-      onTeamCreated();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to create team");
-    } finally {
-      setLoading(false);
-    }
+    toast.info("Team creation feature coming soon!");
+    setShowCreateForm(false);
   };
 
   const inviteToTeam = async (teamId) => {
     if (!selectedUser) return;
     
-    try {
-      await axios.post(`http://localhost:5000/api/v1/teams/${teamId}/invite`, {
-        userId: parseInt(selectedUser)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      toast.success("User invited to team!");
-      setSelectedUser("");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to invite user");
-    }
+    toast.info("Team invitation feature coming soon!");
+    setSelectedUser("");
   };
 
   if (!isOpen) return null;
@@ -156,57 +126,28 @@ export const TeamCollaborationModal = ({ isOpen, onClose, onTeamCreated }) => {
           </div>
         )}
 
-        {/* Teams List */}
+        {/* Available Users */}
         <div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Your Teams</h4>
-          {teams.length === 0 ? (
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Available Users</h4>
+          <p className="text-sm text-gray-600 mb-4">You can collaborate with these users by sharing tasks directly.</p>
+          {users.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No teams yet. Create your first team!</p>
+              <p className="text-gray-500">No users found</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {teams.map((team) => (
-                <div key={team.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-300">
-                  <div className="flex justify-between items-start mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {users.map((user) => (
+                <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
                     <div>
-                      <h5 className="font-semibold text-gray-900">{team.name}</h5>
-                      <p className="text-sm text-gray-600">{team.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Created by {team.created_by} • Your role: {team.role}
-                      </p>
+                      <h5 className="font-semibold text-gray-900">{user.username}</h5>
+                      <p className="text-sm text-gray-600">{user.email}</p>
                     </div>
-                    {team.role === 'admin' && (
-                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                        Admin
-                      </span>
-                    )}
                   </div>
-                  
-                  {team.role === 'admin' && (
-                    <div className="flex items-center space-x-2 pt-3 border-t border-gray-100">
-                      <select
-                        value={selectedUser}
-                        onChange={(e) => setSelectedUser(e.target.value)}
-                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">Select user to invite</option>
-                        {users.map((user) => (
-                          <option key={user.id} value={user.id}>
-                            {user.username} ({user.email})
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => inviteToTeam(team.id)}
-                        disabled={!selectedUser}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 flex items-center space-x-1"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        <span>Invite</span>
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

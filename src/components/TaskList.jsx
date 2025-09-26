@@ -1,7 +1,9 @@
+import { API_URL } from "../config/api.js";
 import { useState } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
-import { CollaborationModal } from "./CollaborationModal.jsx";
-import axios from "axios";
+import { ShareTaskModal } from "./ShareTaskModal.jsx";
+
+
 import { toast } from "sonner";
 
 export const TaskList = ({ tasks, tags, onTaskUpdated, onTaskDeleted }) => {
@@ -10,24 +12,24 @@ export const TaskList = ({ tasks, tags, onTaskUpdated, onTaskDeleted }) => {
   const [editContent, setEditContent] = useState("");
   const [editStatus, setEditStatus] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
-  const [showCollabModal, setShowCollabModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const { token } = useAuthStore();
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "TaskStatus.PENDING": return "bg-yellow-100 text-yellow-800";
-      case "TaskStatus.IN_PROGRESS": return "bg-blue-100 text-blue-800";
-      case "TaskStatus.COMPLETED": return "bg-green-100 text-green-800";
+      case "PENDING": return "bg-yellow-100 text-yellow-800";
+      case "IN_PROGRESS": return "bg-blue-100 text-blue-800";
+      case "COMPLETED": return "bg-green-100 text-green-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case "TaskStatus.PENDING": return "Pending";
-      case "TaskStatus.IN_PROGRESS": return "In Progress";
-      case "TaskStatus.COMPLETED": return "Completed";
+      case "PENDING": return "Pending";
+      case "IN_PROGRESS": return "In Progress";
+      case "COMPLETED": return "Completed";
       default: return status;
     }
   };
@@ -36,20 +38,28 @@ export const TaskList = ({ tasks, tags, onTaskUpdated, onTaskDeleted }) => {
     setEditingTask(task.id);
     setEditTitle(task.title);
     setEditContent(task.content);
-    setEditStatus(task.status === "TaskStatus.PENDING" ? "PENDING" : 
-                  task.status === "TaskStatus.IN_PROGRESS" ? "IN_PROGRESS" : "COMPLETED");
+    setEditStatus(task.status);
   };
 
   const handleUpdate = async (taskId) => {
     setLoading(true);
     try {
-      await axios.put(`http://localhost:5000/api/v1/tasks/${taskId}`, {
-        title: editTitle,
-        content: editContent,
-        status: editStatus
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: editTitle,
+          content: editContent,
+          status: editStatus
+        })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
 
       toast.success("Task updated successfully!");
       setEditingTask(null);
@@ -65,9 +75,17 @@ export const TaskList = ({ tasks, tags, onTaskUpdated, onTaskDeleted }) => {
     if (!confirm("Are you sure you want to delete this task?")) return;
     
     try {
-      await axios.delete(`http://localhost:5000/api/v1/tasks/${taskId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
 
       toast.success("Task deleted successfully!");
       onTaskDeleted();
@@ -145,7 +163,7 @@ export const TaskList = ({ tasks, tags, onTaskUpdated, onTaskDeleted }) => {
                   <button
                     onClick={() => {
                       setSelectedTask(task);
-                      setShowCollabModal(true);
+                      setShowShareModal(true);
                     }}
                     className="text-green-600 hover:text-green-800 font-medium text-sm"
                   >
@@ -164,9 +182,11 @@ export const TaskList = ({ tasks, tags, onTaskUpdated, onTaskDeleted }) => {
               
               <div className="flex justify-between items-center">
                 <div className="flex space-x-2">
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-                    {task.tagName}
-                  </span>
+                  {task.tags && task.tags.length > 0 && (
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                      {task.tags[0].name}
+                    </span>
+                  )}
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
                     {getStatusText(task.status)}
                   </span>
@@ -177,12 +197,14 @@ export const TaskList = ({ tasks, tags, onTaskUpdated, onTaskDeleted }) => {
         </div>
       ))}
       
+
+      
       {selectedTask && (
-        <CollaborationModal
+        <ShareTaskModal
           task={selectedTask}
-          isOpen={showCollabModal}
+          isOpen={showShareModal}
           onClose={() => {
-            setShowCollabModal(false);
+            setShowShareModal(false);
             setSelectedTask(null);
           }}
           onUpdated={onTaskUpdated}

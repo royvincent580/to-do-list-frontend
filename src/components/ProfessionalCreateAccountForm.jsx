@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import axios from "axios";
+import { API_URL } from "../config/api.js";
+
 import { toast } from "sonner";
 
 export const ProfessionalCreateAccountForm = () => {
@@ -15,18 +16,30 @@ export const ProfessionalCreateAccountForm = () => {
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:5000/api/v1/users", {
-        username,
-        email,
-        password,
+      const response = await fetch(`${API_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+        }),
       });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Account creation failed');
+      }
 
       toast.success("Account created successfully! Please sign in.");
       setUsername("");
       setEmail("");
       setPassword("");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Account creation failed");
+      toast.error(error.message || "Account creation failed");
     } finally {
       setLoading(false);
     }
@@ -79,8 +92,8 @@ export const ProfessionalCreateAccountForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 bg-white"
-            placeholder="Create a password (min 6 characters)"
-            minLength={6}
+            placeholder="Create a password (min 8 chars, 1 upper, 1 lower, 1 digit)"
+            minLength={8}
             required
           />
           <button
@@ -91,7 +104,7 @@ export const ProfessionalCreateAccountForm = () => {
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
+        <p className="text-xs text-gray-500 mt-1">Must be 8+ chars with 1 uppercase, 1 lowercase, 1 digit</p>
       </div>
       
       <button

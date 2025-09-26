@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { API_URL } from "../config/api.js";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
 import { FormikTaskForm } from "../components/FormikTaskForm.jsx";
 import { TaskList } from "../components/TaskList.jsx";
-import axios from "axios";
+
 import { toast } from "sonner";
 
 export const TasksPage = () => {
@@ -12,21 +13,36 @@ export const TasksPage = () => {
   const [loading, setLoading] = useState(true);
   const { token } = useAuthStore();
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/tasks/user", {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/user`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setTasks(response.data);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      
+      const data = await response.json();
+      setTasks(data);
     } catch (error) {
       toast.error("Failed to fetch tasks");
     }
-  };
+  }, [token]);
 
   const fetchTags = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/tags");
-      setTags(response.data);
+      const response = await fetch(`${API_URL}/tags`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tags');
+      }
+      
+      const data = await response.json();
+      setTags(data);
     } catch (error) {
       toast.error("Failed to fetch tags");
     }
@@ -38,7 +54,7 @@ export const TasksPage = () => {
       setLoading(false);
     };
     loadData();
-  }, []);
+  }, [fetchTasks]);
 
   if (loading) {
     return (

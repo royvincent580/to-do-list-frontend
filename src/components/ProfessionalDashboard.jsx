@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { API_URL } from "../config/api.js";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
 import { ProfessionalTaskCard } from "./ProfessionalTaskCard.jsx";
 import { FormikTaskForm } from "./FormikTaskForm.jsx";
 import { CollaborativeTasks } from "./CollaborativeTasks.jsx";
 import { Plus, BarChart3, CheckSquare, Clock, Users, TrendingUp } from "lucide-react";
-import axios from "axios";
+
 import { toast } from "sonner";
 
 export const ProfessionalDashboard = () => {
@@ -14,39 +15,74 @@ export const ProfessionalDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { token } = useAuthStore();
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
+    if (!token) return;
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/tasks/user", {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/user`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setTasks(response.data);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error("Please sign in again");
+          return;
+        }
+        throw new Error('Failed to fetch tasks');
+      }
+      
+      const data = await response.json();
+      setTasks(data);
     } catch (error) {
-      toast.error("Failed to fetch tasks");
+      console.error('Fetch tasks error:', error);
+      toast.error("Backend is starting up, please wait...");
     }
-  };
+  }, [token]);
 
   const fetchTags = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/tags");
-      setTags(response.data);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
+      const response = await fetch(`${API_URL}/tags`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tags');
+      }
+      
+      const data = await response.json();
+      setTags(data);
     } catch (error) {
-      toast.error("Failed to fetch tags");
+      if (error.name === 'AbortError') {
+        toast.error("Request timed out - backend may be starting up");
+      } else {
+        console.error('Fetch tags error:', error);
+      }
     }
   };
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchTasks(), fetchTags()]);
-      setLoading(false);
+      try {
+        await Promise.all([fetchTasks(), fetchTags()]);
+      } finally {
+        setLoading(false);
+      }
     };
     loadData();
-  }, []);
+  }, [fetchTasks]);
 
   const getTaskStats = () => {
     const total = tasks.length;
-    const pending = tasks.filter(t => t.status === "TaskStatus.PENDING").length;
-    const inProgress = tasks.filter(t => t.status === "TaskStatus.IN_PROGRESS").length;
-    const completed = tasks.filter(t => t.status === "TaskStatus.COMPLETED").length;
+    const pending = tasks.filter(t => t.status === "TaskStatus.PENDING" || t.status === "PENDING").length;
+    const inProgress = tasks.filter(t => t.status === "TaskStatus.IN_PROGRESS" || t.status === "IN_PROGRESS").length;
+    const completed = tasks.filter(t => t.status === "TaskStatus.COMPLETED" || t.status === "COMPLETED").length;
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     return { total, pending, inProgress, completed, completionRate };
@@ -60,6 +96,7 @@ export const ProfessionalDashboard = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading your workspace...</p>
+          <p className="text-gray-400 text-sm mt-2">Backend may be starting up (free tier) - please wait</p>
         </div>
       </div>
     );
