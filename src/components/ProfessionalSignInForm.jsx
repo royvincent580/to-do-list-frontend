@@ -41,19 +41,17 @@ export const ProfessionalSignInForm = () => {
 
       clearTimeout(timeoutId);
       
-      // Check if response is actually JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
         const text = await response.text();
-        // Log error for debugging in development only
         if (import.meta.env.DEV) console.log('Non-JSON response:', text.substring(0, 200));
         if (text.includes('Application Error') || text.includes('503')) {
           throw new Error('Backend is starting up. Please wait 30-60 seconds and try again.');
         }
-        throw new Error('Server returned non-JSON response. Backend may be down.');
+        throw new Error('Server error - please try again');
       }
-      
-      const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || `Server error (${response.status})`);
