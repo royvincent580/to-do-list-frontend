@@ -10,7 +10,7 @@ export const BackendHealthCheck = ({ children }) => {
     const checkBackendHealth = async () => {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s for cold start
         
         const response = await fetch(`${API_URL}/tags`, {
           signal: controller.signal
@@ -28,7 +28,7 @@ export const BackendHealthCheck = ({ children }) => {
       } catch (error) {
         setIsHealthy(false);
         if (error.name === 'AbortError') {
-          toast.error("Backend is starting up - this may take 30-60 seconds on free tier");
+          toast.error("Backend is starting up - please wait 30-60 seconds and refresh");
         } else {
           toast.error("Backend connection failed - please wait and refresh");
         }
@@ -46,7 +46,7 @@ export const BackendHealthCheck = ({ children }) => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Checking backend status...</p>
-          <p className="text-gray-400 text-sm mt-2">This may take up to 60 seconds on free tier</p>
+          <p className="text-gray-400 text-sm mt-2">Free tier backend is starting up - please wait up to 60 seconds</p>
         </div>
       </div>
     );
