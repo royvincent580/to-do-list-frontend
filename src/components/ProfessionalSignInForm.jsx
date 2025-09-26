@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
+import { API_URL } from "../config/api.js";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import axios from "axios";
+
 import { toast } from "sonner";
 
 export const ProfessionalSignInForm = () => {
@@ -16,16 +17,37 @@ export const ProfessionalSignInForm = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/v1/auth/sign-in", {
-        email,
-        password,
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for cold start
+      
+      const response = await fetch(`${API_URL}/auth/sign-in`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+        signal: controller.signal
       });
 
-      const token = response.data.token;
+      clearTimeout(timeoutId);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Sign in failed');
+      }
+
+      const token = data.token;
       signIn(token);
       toast.success("Welcome back!");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Sign in failed");
+      if (error.name === 'AbortError') {
+        toast.error("Sign in timed out - backend may be starting up, please try again");
+      } else {
+        toast.error(error.message || "Sign in failed");
+      }
     } finally {
       setLoading(false);
     }

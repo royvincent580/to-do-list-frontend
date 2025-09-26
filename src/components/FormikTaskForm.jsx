@@ -1,8 +1,11 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useAuthStore } from "../stores/auth-store.js";
-import axios from "axios";
+import { API_URL } from "../config/api.js";
+
 import { toast } from "sonner";
+
+
 
 const TaskSchema = Yup.object().shape({
   title: Yup.string()
@@ -32,19 +35,41 @@ export const FormikTaskForm = ({ tags, onTaskCreated, initialValues = null, task
   };
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    if (!token) {
+      toast.error("Please sign in first");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const url = taskId 
-        ? `http://localhost:5000/api/v1/tasks/${taskId}`
-        : "http://localhost:5000/api/v1/tasks";
+        ? `${API_URL}/tasks/${taskId}`
+        : `${API_URL}/tasks`;
       
-      const method = taskId ? "put" : "post";
+      const method = taskId ? "patch" : "post";
       
-      await axios[method](url, {
-        ...values,
-        tagId: parseInt(values.tagId),
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      
+      const response = await fetch(url, {
+        method: method.toUpperCase(),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...values,
+          tagId: parseInt(values.tagId),
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Operation failed');
+      }
 
       toast.success(taskId ? "Task updated successfully!" : "Task created successfully!");
       
@@ -54,7 +79,12 @@ export const FormikTaskForm = ({ tags, onTaskCreated, initialValues = null, task
       
       onTaskCreated();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Operation failed");
+      console.error('API Error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          "Operation failed";
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }

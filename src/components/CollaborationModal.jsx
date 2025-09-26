@@ -1,79 +1,83 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
-import axios from "axios";
+import { API_URL } from "../config/api.js";
+
 import { toast } from "sonner";
 
 export const CollaborationModal = ({ task, isOpen, onClose, onUpdated }) => {
   const [users, setUsers] = useState([]);
   const [collaborators, setCollaborators] = useState([]);
-  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedUser, setSelectedUser] = useState(""); // Now stores email
   const [loading, setLoading] = useState(false);
   const { token } = useAuthStore();
   
 
   useEffect(() => {
     if (isOpen) {
-      fetchUsers();
       fetchCollaborators();
     }
-  }, [isOpen, task.id]);
+  }, [isOpen, task.id, fetchCollaborators]);
 
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/v1/users", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers(response.data);
-    } catch (error) {
-      toast.error("Failed to fetch users");
-    }
-  };
+  const fetchUsers = useCallback(async () => {
+    // No longer needed since we use email input
+    setUsers([]);
+  }, []);
 
-  const fetchCollaborators = async () => {
+  const fetchCollaborators = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/v1/tasks/${task.id}/collaborators`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/${task.id}/collaborators`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setCollaborators(response.data);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch collaborators');
+      }
+      
+      const data = await response.json();
+      setCollaborators(data);
     } catch (error) {
       console.log("No collaborators endpoint or error");
     }
-  };
+  }, [task.id, token]);
 
   const addCollaborator = async () => {
     if (!selectedUser) return;
     setLoading(true);
 
     try {
-      await axios.post(`http://localhost:5000/api/v1/tasks/${task.id}/collaborators`, {
-        userId: parseInt(selectedUser)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/${task.id}/collaborators`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: selectedUser,
+          role: "collaborator"
+        })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add collaborator');
+      }
 
       toast.success("Collaborator added successfully!");
       setSelectedUser("");
       fetchCollaborators();
       onUpdated();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add collaborator");
+      toast.error(error.message || "Failed to add collaborator");
     } finally {
       setLoading(false);
     }
   };
 
   const removeCollaborator = async (userId) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/v1/tasks/${task.id}/collaborators/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      toast.success("Collaborator removed successfully!");
-      fetchCollaborators();
-      onUpdated();
-    } catch (error) {
-      toast.error("Failed to remove collaborator");
-    }
+    toast.info("Remove collaborator feature not implemented in backend yet");
   };
 
   if (!isOpen) return null;
@@ -97,21 +101,16 @@ export const CollaborationModal = ({ task, isOpen, onClose, onUpdated }) => {
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Add Collaborator
+            Add Collaborator by Email
           </label>
           <div className="flex space-x-2">
-            <select
+            <input
+              type="email"
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
+              placeholder="Enter collaborator's email"
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            >
-              <option value="">Select a user</option>
-              {users.filter(user => !collaborators.find(c => c.id === user.id)).map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.username} ({user.email})
-                </option>
-              ))}
-            </select>
+            />
             <button
               onClick={addCollaborator}
               disabled={loading || !selectedUser}

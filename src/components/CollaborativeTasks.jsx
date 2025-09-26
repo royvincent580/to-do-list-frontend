@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "../stores/auth-store.js";
 import { CollaborationModal } from "./CollaborationModal.jsx";
-import axios from "axios";
+import { API_URL } from "../config/api.js";
+
 import { toast } from "sonner";
 
 export const CollaborativeTasks = () => {
@@ -11,38 +12,47 @@ export const CollaborativeTasks = () => {
   const [loading, setLoading] = useState(true);
   const { token } = useAuthStore();
 
-  const fetchCollaborativeTasks = async () => {
+  const fetchCollaborativeTasks = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/tasks/collaborative", {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/collaborative`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setCollaborativeTasks(response.data);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch collaborative tasks');
+      }
+      
+      const data = await response.json();
+      setCollaborativeTasks(data);
     } catch (error) {
       // If endpoint doesn't exist, show empty state
       setCollaborativeTasks([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchCollaborativeTasks();
-  }, []);
+  }, [fetchCollaborativeTasks]);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "TaskStatus.PENDING": return "bg-yellow-100 text-yellow-800";
-      case "TaskStatus.IN_PROGRESS": return "bg-blue-100 text-blue-800";
-      case "TaskStatus.COMPLETED": return "bg-green-100 text-green-800";
+      case "PENDING": return "bg-yellow-100 text-yellow-800";
+      case "IN_PROGRESS": return "bg-blue-100 text-blue-800";
+      case "COMPLETED": return "bg-green-100 text-green-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case "TaskStatus.PENDING": return "Pending";
-      case "TaskStatus.IN_PROGRESS": return "In Progress";
-      case "TaskStatus.COMPLETED": return "Completed";
+      case "PENDING": return "Pending";
+      case "IN_PROGRESS": return "In Progress";
+      case "COMPLETED": return "Completed";
       default: return status;
     }
   };
@@ -54,11 +64,18 @@ export const CollaborativeTasks = () => {
 
   const updateTaskStatus = async (taskId, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/v1/tasks/${taskId}`, {
-        status: newStatus
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update task status');
+      }
 
       toast.success("Task status updated!");
       fetchCollaborativeTasks();
@@ -111,17 +128,18 @@ export const CollaborativeTasks = () => {
               
               <div className="flex justify-between items-center">
                 <div className="flex space-x-2">
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-                    {task.tagName}
-                  </span>
+                  {task.tags && task.tags.length > 0 && (
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                      {task.tags[0].name}
+                    </span>
+                  )}
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
                     {getStatusText(task.status)}
                   </span>
                 </div>
                 
                 <select
-                  value={task.status === "TaskStatus.PENDING" ? "PENDING" : 
-                        task.status === "TaskStatus.IN_PROGRESS" ? "IN_PROGRESS" : "COMPLETED"}
+                  value={task.status}
                   onChange={(e) => updateTaskStatus(task.id, e.target.value)}
                   className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
                 >
