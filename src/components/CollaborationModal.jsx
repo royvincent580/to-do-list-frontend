@@ -39,7 +39,7 @@ export const CollaborationModal = ({ task, isOpen, onClose, onUpdated }) => {
       const data = await response.json();
       setCollaborators(data);
     } catch (error) {
-      console.log("No collaborators endpoint or error");
+      if (import.meta.env.DEV) console.log("No collaborators endpoint or error");
     }
   }, [task.id, token]);
 

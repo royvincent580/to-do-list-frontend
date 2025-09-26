@@ -41,7 +41,7 @@ export const ProfessionalDashboard = () => {
       const data = await response.json();
       setTasks(data);
     } catch (error) {
-      console.error('Fetch tasks error:', error);
+      if (import.meta.env.DEV) console.error('Fetch tasks error:', error);
       toast.error("Backend is starting up, please wait...");
     }
   }, [token]);
@@ -72,7 +72,7 @@ export const ProfessionalDashboard = () => {
       if (error.name === 'AbortError') {
         toast.error("Request timed out - backend may be starting up");
       } else {
-        console.error('Fetch tags error:', error);
+        if (import.meta.env.DEV) console.error('Fetch tags error:', error);
       }
     }
   };

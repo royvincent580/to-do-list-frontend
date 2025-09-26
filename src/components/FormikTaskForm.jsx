@@ -67,12 +67,13 @@ export const FormikTaskForm = ({ tags, onTaskCreated, initialValues = null, task
       clearTimeout(timeoutId);
       
       if (!response.ok) {
+        const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes("application/json")) {
           const errorData = await response.json();
+          throw new Error(errorData.message || 'Operation failed');
         } else {
           throw new Error("Server error");
         }
-        throw new Error(errorData.message || 'Operation failed');
       }
 
       toast.success(taskId ? "Task updated successfully!" : "Task created successfully!");
@@ -83,11 +84,8 @@ export const FormikTaskForm = ({ tags, onTaskCreated, initialValues = null, task
       
       onTaskCreated();
     } catch (error) {
-      console.error('API Error:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          "Operation failed";
+      if (import.meta.env.DEV) console.error('API Error:', error.message);
+      const errorMessage = error.message || "Operation failed";
       toast.error(errorMessage);
     } finally {
       setSubmitting(false);

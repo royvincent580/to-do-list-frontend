@@ -34,7 +34,7 @@ export const TasksPage = () => {
       const data = await response.json();
       setTasks(data);
     } catch (error) {
-      console.error('Fetch tasks error:', error);
+      if (import.meta.env.DEV) console.error('Fetch tasks error:', error);
       toast.error("Failed to fetch tasks");
     }
   }, [token]);
@@ -55,7 +55,7 @@ export const TasksPage = () => {
       const data = await response.json();
       setTags(data);
     } catch (error) {
-      console.error('Fetch tags error:', error);
+      if (import.meta.env.DEV) console.error('Fetch tags error:', error);
       toast.error("Failed to fetch tags");
     }
   };

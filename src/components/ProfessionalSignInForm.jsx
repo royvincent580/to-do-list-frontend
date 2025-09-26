@@ -24,8 +24,6 @@ export const ProfessionalSignInForm = () => {
     }
 
     try {
-      console.log('Attempting to sign in to:', `${API_URL}/auth/sign-in`);
-      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
       
@@ -42,14 +40,13 @@ export const ProfessionalSignInForm = () => {
       });
 
       clearTimeout(timeoutId);
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers.get('content-type'));
       
       // Check if response is actually JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
-        console.log('Non-JSON response:', text.substring(0, 200));
+        // Log error for debugging in development only
+        if (import.meta.env.DEV) console.log('Non-JSON response:', text.substring(0, 200));
         if (text.includes('Application Error') || text.includes('503')) {
           throw new Error('Backend is starting up. Please wait 30-60 seconds and try again.');
         }
@@ -69,7 +66,7 @@ export const ProfessionalSignInForm = () => {
       signIn(data.token);
       toast.success("Welcome back!");
     } catch (error) {
-      console.error('Sign in error:', error);
+      if (import.meta.env.DEV) console.error('Sign in error:', error);
       if (error.name === 'AbortError') {
         toast.error("Request timed out - backend is starting up, please wait and try again");
       } else if (error.message.includes('fetch')) {

@@ -83,7 +83,7 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
       return;
     }
 
-    console.log('Deleting task with ID:', taskId, 'Type:', typeof taskId);
+
     
     try {
       const response = await fetch(`${API_URL}/tasks/${taskId}`, {
@@ -101,7 +101,7 @@ export const ProfessionalTaskCard = ({ task, tags, onTaskUpdated, onTaskDeleted 
       toast.success("Task deleted successfully!");
       onTaskDeleted();
     } catch (error) {
-      console.error('Delete error:', error.message);
+      if (import.meta.env.DEV) console.error('Delete error:', error.message);
       toast.error(error.message || "Failed to delete task");
     }
   };
