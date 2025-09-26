@@ -49,7 +49,10 @@ export const ProfessionalSignInForm = () => {
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
-        console.log('Non-JSON response:', text);
+        console.log('Non-JSON response:', text.substring(0, 200));
+        if (text.includes('Application Error') || text.includes('503')) {
+          throw new Error('Backend is starting up. Please wait 30-60 seconds and try again.');
+        }
         throw new Error('Server returned non-JSON response. Backend may be down.');
       }
       
