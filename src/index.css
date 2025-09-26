@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    @apply bg-gray-50 text-gray-700;
+  }
+}
+
+@layer components {
+  .cs-container {
+    @apply px-6 mx-auto md:max-w-3xl lg:max-w-5xl;
+  }
+
+  .cs-section {
+    @apply pt-[3rem] pb-[2.5rem] md:pb-[3.5rem];
+  }
+
+  .landing-bg {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%);
+  }
+  
+  .glovo-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .glovo-button {
+    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+    transition: all 0.3s ease;
+  }
+  
+  .glovo-button:hover {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(251, 191, 36, 0.4);
+  }
+  
+  .glovo-accent {
+    color: #F59E0B;
+  }
+  
+  .glovo-text {
+    color: #374151;
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  .animated-bg {
+    background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+  }
+  
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .hover-glow {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-glow:hover {
+    text-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+    transform: scale(1.05);
+  }
+  
+  .hover-bounce {
+    transition: transform 0.3s ease;
+  }
+  
+  .hover-bounce:hover {
+    transform: translateY(-3px);
+  }
+  
+  .hover-gradient {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .hover-gradient:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
