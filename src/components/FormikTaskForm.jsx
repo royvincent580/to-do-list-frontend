@@ -67,10 +67,10 @@ export const FormikTaskForm = ({ tags, onTaskCreated, initialValues = null, task
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        if (contentType && contentType.includes("application/json")) {
+        try {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Operation failed');
-        } else {
+        } catch (jsonError) {
           throw new Error("Server error");
         }
       }
