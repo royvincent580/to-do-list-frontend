@@ -71,8 +71,15 @@ export const FormikTaskForm = ({ tags, onTaskCreated, initialValues = null, task
           const errorData = await response.json();
           throw new Error(errorData.message || 'Operation failed');
         } catch (jsonError) {
-          throw new Error("Server error");
+          throw new Error(`Server error (${response.status})`);
         }
+      }
+
+      // Try to parse response, but don't fail if it's empty
+      try {
+        await response.json();
+      } catch (jsonError) {
+        // Ignore JSON parsing errors for successful responses
       }
 
       toast.success(taskId ? "Task updated successfully!" : "Task created successfully!");
