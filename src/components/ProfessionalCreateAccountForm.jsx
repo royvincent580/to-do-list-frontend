@@ -26,7 +26,7 @@ export const ProfessionalCreateAccountForm = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
       
-      const response = await fetch(`${API_URL}/api/v1/users`, {
+      const response = await fetch(`${API_URL}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
