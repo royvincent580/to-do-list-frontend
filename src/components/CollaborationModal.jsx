@@ -61,12 +61,12 @@ export const CollaborationModal = ({ task, isOpen, onClose, onUpdated }) => {
       });
       
       if (!response.ok) {
-        if (contentType && contentType.includes("application/json")) {
+        try {
           const errorData = await response.json();
-        } else {
+          throw new Error(errorData.message || 'Failed to add collaborator');
+        } catch (jsonError) {
           throw new Error("Server error");
         }
-        throw new Error(errorData.message || 'Failed to add collaborator');
       }
 
       toast.success("Collaborator added successfully!");

@@ -21,6 +21,7 @@ export const BackendHealthCheck = ({ children }) => {
         
         clearTimeout(timeoutId);
         
+        const contentType = response.headers.get('content-type');
         if (response.ok && contentType && contentType.includes('application/json')) {
           setIsHealthy(true);
           toast.success("Backend is ready!");
