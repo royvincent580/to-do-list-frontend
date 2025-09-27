@@ -1,23 +1,23 @@
-# 📝 Professional Task Manager - Frontend
+#  Professional Task Manager - Frontend
 
 A modern, responsive task management application built with React and Vite. Features user authentication, task CRUD operations, collaboration, and a professional dashboard.
 
-## 🚀 Live Demo
+##  Live Demo
 
 **Frontend**: [Deployed on Vercel](https://your-app.vercel.app)  
 **Backend**: [API on Render](https://to-do-list-backend-04i3.onrender.com)
 
-## ✨ Features
+##  Features
 
-- 🔐 **User Authentication** - Sign up, sign in with JWT tokens
-- 📋 **Task Management** - Create, read, update, delete tasks
-- 🏷️ **Tag System** - Organize tasks with tags
-- 👥 **Collaboration** - Share tasks with other users
-- 📊 **Dashboard** - Visual stats and task overview
-- 📱 **Responsive Design** - Works on desktop and mobile
-- 🎨 **Modern UI** - Clean, professional interface with Tailwind CSS
+-  **User Authentication** - Sign up, sign in with JWT tokens
+-  **Task Management** - Create, read, update, delete tasks
+-  **Tag System** - Organize tasks with tags
+-  **Collaboration** - Share tasks with other users
+-  **Dashboard** - Visual stats and task overview
+-  **Responsive Design** - Works on desktop and mobile
+-  **Modern UI** - Clean, professional interface with Tailwind CSS
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Framework**: React 18
 - **Build Tool**: Vite
@@ -28,7 +28,7 @@ A modern, responsive task management application built with React and Vite. Feat
 - **State Management**: Zustand
 - **HTTP Client**: Fetch API
 
-## 🏃‍♂️ Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
@@ -67,7 +67,7 @@ A modern, responsive task management application built with React and Vite. Feat
    http://localhost:5173
    ```
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 src/
@@ -101,7 +101,7 @@ npm run lint         # Run ESLint
 npm run deploy       # Deploy to Vercel (if configured)
 ```
 
-## 🌐 Deployment
+##  Deployment
 
 ### Deploy to Vercel
 
@@ -127,7 +127,7 @@ npm run deploy       # Deploy to Vercel (if configured)
    - Drag `dist/` folder to Netlify
    - Or connect your GitHub repo
 
-## 🔐 Authentication
+##  Authentication
 
 The app uses JWT tokens for authentication:
 
@@ -136,21 +136,21 @@ The app uses JWT tokens for authentication:
 3. **Protected Routes** - Automatic token validation
 4. **Auto Logout** - Token expiration handling
 
-## 📋 Task Management
+##  Task Management
 
 ### Task Features
-- ✅ Create tasks with title, content, tags, and status
-- ✅ Update task details and status
-- ✅ Delete tasks
-- ✅ Filter by status (Pending, In Progress, Completed)
-- ✅ Tag-based organization
+-  Create tasks with title, content, tags, and status
+-  Update task details and status
+-  Delete tasks
+-  Filter by status (Pending, In Progress, Completed)
+-  Tag-based organization
 
 ### Collaboration
-- 👥 Share tasks with other users by email
-- 👥 Add multiple collaborators at once
-- 👥 View collaborative tasks separately
+-  Share tasks with other users by email
+-  Add multiple collaborators at once
+-  View collaborative tasks separately
 
-## 🎨 UI Components
+##  UI Components
 
 ### Key Components
 - **ProfessionalDashboard** - Main dashboard with stats
@@ -165,7 +165,7 @@ The app uses JWT tokens for authentication:
 - **Professional color scheme** with gradients
 - **Smooth animations** and transitions
 
-## 🔧 Configuration
+##  Configuration
 
 ### Environment Variables
 ```env
@@ -178,7 +178,7 @@ The frontend connects to a Flask REST API:
 - **Authentication**: Bearer token in headers
 - **Error Handling**: Graceful error messages
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -194,7 +194,7 @@ The frontend connects to a Flask REST API:
 - Clear node_modules: `rm -rf node_modules && npm install`
 - Update dependencies: `npm update`
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
@@ -202,11 +202,11 @@ The frontend connects to a Flask REST API:
 4. Push to branch: `git push origin feature-name`
 5. Submit a pull request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License.
 
-## 🔗 Links
+##  Links
 
 - **Frontend Repository**: [GitHub](https://github.com/royvincent580/to-do-list-frontend)
 - **Backend Repository**: [GitHub](https://github.com/royvincent580/to-do-list-backend)
