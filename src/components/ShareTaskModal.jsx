@@ -45,6 +45,7 @@ export const ShareTaskModal = ({ task, isOpen, onClose, onUpdated }) => {
       onUpdated();
       onClose();
     } catch (error) {
+      console.error('Share task error:', error);
       toast.error(error.message);
     } finally {
       setLoading(false);

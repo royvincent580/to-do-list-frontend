@@ -74,6 +74,7 @@ export const CollaborationModal = ({ task, isOpen, onClose, onUpdated }) => {
       fetchCollaborators();
       onUpdated();
     } catch (error) {
+      console.error('Collaboration error:', error);
       toast.error(error.message || "Failed to add collaborator");
     } finally {
       setLoading(false);
