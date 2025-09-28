@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Collaboration</title>
+</head>
+<body>
+    <h1>Test Collaboration Feature</h1>
+    <button onclick="testCollaboration()">Test Add Collaborator</button>
+    <div id="result"></div>
+
+    <script>
+        async function testCollaboration() {
+            const result = document.getElementById('result');
+            
+            try {
+                // First sign in
+                const signInResponse = await fetch('https://to-do-list-backend-04i3.onrender.com/api/v1/auth/sign-in', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'TestPassword123'
+                    })
+                });
+                
+                if (!signInResponse.ok) {
+                    result.innerHTML = 'Sign in failed. Create account first.';
+                    return;
+                }
+                
+                const { access_token } = await signInResponse.json();
+                
+                // Test collaboration endpoint
+                const collabResponse = await fetch('https://to-do-list-backend-04i3.onrender.com/api/v1/tasks/1/collaborators', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${access_token}`
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        role: 'collaborator'
+                    })
+                });
+                
+                const collabResult = await collabResponse.json();
+                result.innerHTML = `Status: ${collabResponse.status}<br>Response: ${JSON.stringify(collabResult)}`;
+                
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

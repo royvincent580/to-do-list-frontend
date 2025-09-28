@@ -13,6 +13,7 @@ export const ProfessionalDashboard = () => {
   const [tags, setTags] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const { token } = useAuthStore();
 
   const fetchTasks = useCallback(async () => {
@@ -67,10 +68,29 @@ export const ProfessionalDashboard = () => {
     }
   };
 
+  const fetchUser = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(`${API_URL}/users/me`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) console.error('Fetch user error:', error);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        await Promise.all([fetchTasks(), fetchTags()]);
+        await Promise.all([fetchTasks(), fetchTags(), fetchUser()]);
       } finally {
         setLoading(false);
       }
@@ -110,7 +130,7 @@ export const ProfessionalDashboard = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-              <p className="text-gray-600">Welcome back! Here's what's happening with your tasks.</p>
+              <p className="text-gray-600">Welcome back{user?.username ? `, ${user.username}` : ''}! Here's what's happening with your tasks.</p>
             </div>
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
